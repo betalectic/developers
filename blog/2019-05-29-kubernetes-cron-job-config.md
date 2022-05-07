@@ -1,7 +1,15 @@
+---
+slug: how-to-run-cron-job-kubernetes
+title: How to run CRON Jobs in Kubernetes
+authors: [shubham]
+tags: [Kubernetes, CRON]
+---
+
 For Kubernetes Version 1.20
 
 - create a file called cronjob.yml.
 - Paste the below script:
+
 ```
 apiVersion: batch/v1beta1 // for kubernetes-v1.20
 kind: CronJob
