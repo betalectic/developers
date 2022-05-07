@@ -5,11 +5,13 @@ authors: [mahesh]
 tags: [React]
 ---
 
-# React Custom Hook
+## Definition
 
 Custom Hook is a JavaScript function which we create by ourselves, when we want to share logic between other JavaScript functions.
 
 It allows you to reuse some piece of code in several parts of your app.
+
+## Useful points
 
 - The main reason to write a custom hook is for code reusability.
 - For example, instead of writing the same code across multiple components that use the same common stateful logic (say a “setState” or localStorage logic), you can put that code inside a custom hook and reuse it.
@@ -17,69 +19,42 @@ It allows you to reuse some piece of code in several parts of your app.
 - Custom Hooks allow us to access the React ecosystem in terms of hooks, which means we have access to all the known hooks like useState, useMemo, useEffect, etc.
 - This mechanism enables the separation of logic and view.
 
-## Where do you put a custom hook?
+## Rules of custom hooks
 
-- Always use Hooks at the top level of your React function.
-- By following this rule, you ensure that Hooks are called in the same order each time a component renders.
-- That's what allows React to correctly preserve the state of Hooks between multiple useState and useEffect calls.
+** *Note: The same rules of react hooks will be applicable to the custom hooks.**
 
-## Why are Hooks better than classes?
+### 1. Only Call Hooks at the Top Level
+
+**Always use Hooks at the top level of your React function.** By following this rule, you ensure that Hooks are called in the same order each time a component renders. That's what allows React to correctly preserve the state of Hooks between multiple useState and useEffect calls.
+
+### 2. Only Call Custom hooks from React Functions
+
+**Don't call custom hooks from regular Javascript functions.** Instead, you can
+
+- ✅ Call Custom hooks from React function components
+- ✅ Call Custom hooks from other Custom hooks
+
+### 3. Don't call custom hooks conditionally
+
+- If you want to run an effect conditionally, we can put that condition inside our Custom hook
+
+### 4. Don't call custom hooks in loops
+
+- If you want to run an effect without leading bugs, we can put that loops inside our Custom hook
+
+## Hooks are better than classes
 
 - Hooks allow you to use local state and other React features without writing a class.
 - Hooks are special functions that let you “hook onto” React state and lifecycle features inside function components.
 
-### Let us look into creation of sample custom hook
+## Example
+
+### useEventListener
 
 - If you find yourself adding a lot of event listeners using useEffect you might consider moving that logic to a custom hook.
 - In the recipe below we create a useEventListener hook that handles checking if addEventListener is supported, adding the event listener, and removal on cleanup.
 
-#### `App.js` file:
-
-```js
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import useEventListener from "./useEventListener";
-
-export default function App() {
-  const [coords, setCoords] = useState({ x: 0, y: 0 });
-  const [targetElement, setTargetElement] = useState(null);
-
-  const buttonRef = useRef(null);
-  const headingRef = useRef(null);
-
-  // event utilizing useCallback, so that reference never changes
-  const handler1 = useCallback((event) => {
-    const { clientX, clientY } = event;
-    // update coordinates
-    setCoords({ x: clientX, y: clientY });
-  });
-
-  const handler2 = useCallback((event) => {
-    const { currentTarget } = event;
-    // update buttonCoords
-    setTargetElement(currentTarget.tagName);
-  });
-
-  useEventListener("mousemove", handler1);
-  useEventListener("click", handler2, buttonRef?.current);
-  useEventListener("click", handler2, headingRef?.current);
-
-  return (
-    <div>
-      <h1>
-        The mouse coordinates ({coords.x}, {coords.y})
-      </h1>
-      <button ref={buttonRef}>Button</button>
-
-      <h1 style={{ cursor: "pointer" }} ref={headingRef}>
-        Heading
-      </h1>
-      <h2>You clicked the {targetElement}</h2>
-    </div>
-  );
-}
-```
-
-#### `useEventListener.js` file:
+### 1. Create `useEventListener.js` file
 
 ```js
 import { useEffect, useRef } from "react";
@@ -112,6 +87,67 @@ export default function useEventListener(eventName, handler, element = window) {
       element.removeEventListener(eventName, eventListener);
     };
   }, [eventName, element]);
+}
+```
+
+### 2. Create `App.js` file
+
+- Import `useEventListener` in `App.js` file
+
+```js
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import useEventListener from "./useEventListener";
+
+export default function App() {
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
+  const [targetElement, setTargetElement] = useState(null);
+
+  const buttonRef = useRef(null);
+  const headingRef = useRef(null);
+
+  // event utilizing useCallback, so that reference never changes
+  const getCoordinatesOfWindow = useCallback((event) => {
+    const { clientX, clientY } = event;
+    // update coordinates
+    setCoords({ x: clientX, y: clientY });
+  });
+
+  // event utilizing useCallback, so that reference never changes
+  const getClickedTargetElementTagName = useCallback((event) => {
+    const { currentTarget } = event;
+    // update element tag name
+    setTargetElement(currentTarget.tagName);
+  });
+
+  // this hook is called when your mouse point is changing and give the coordinates of the mouse pointer 
+  // further we are showing the mouse pointer coordinates in UI
+  useEventListener("mousemove", getCoordinatesOfWindow);
+
+  // this hook is called when you click on <button></button> and give the tag name of the button element
+  // further we are showing in the UI
+  useEventListener("click", getClickedTargetElementTagName, buttonRef?.current);
+
+  // this hook is called when you click on <h1></h1> and give the tag name of the h1 element
+  // further we are showing in the UI
+  useEventListener("click", getClickedTargetElementTagName, headingRef?.current);
+
+  return (
+    <div>
+
+      <h1>
+        The mouse coordinates ({coords.x}, {coords.y})
+      </h1>
+
+      <button ref={buttonRef}>Button</button>
+
+      <h1 style={{ cursor: "pointer" }} ref={headingRef}>
+        Heading
+      </h1>
+
+      <h2>You clicked the {targetElement}</h2>
+
+    </div>
+  );
 }
 ```
 
